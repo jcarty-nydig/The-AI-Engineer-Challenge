@@ -2,13 +2,12 @@
 import { useState, useRef, useEffect } from "react";
 
 function getApiKey() {
-  if (typeof window === "undefined") return "";
-  return localStorage.getItem("openai_api_key") || "";
+  // Read from environment variable (client-side, must be NEXT_PUBLIC_ prefix)
+  return process.env.NEXT_PUBLIC_OPENAI_API_KEY || "";
 }
 
 function setApiKey(key: string) {
-  if (typeof window === "undefined") return;
-  localStorage.setItem("openai_api_key", key);
+  // No-op: API key is now set via environment variable
 }
 
 export default function Home() {
@@ -18,13 +17,10 @@ export default function Home() {
   const [input, setInput] = useState("");
   const [showSettings, setShowSettings] = useState(false);
   const [apiKey, setApiKeyState] = useState(getApiKey());
-  const [showApiKeyPrompt, setShowApiKeyPrompt] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!getApiKey()) {
-      setShowApiKeyPrompt(true);
-    }
+    // No need to prompt for API key, it's set via env variable
   }, []);
 
   useEffect(() => {
@@ -33,12 +29,6 @@ export default function Home() {
 
   const handleSettings = () => {
     setShowSettings(true);
-  };
-
-  const handleApiKeySave = () => {
-    setApiKey(apiKey);
-    setShowSettings(false);
-    setShowApiKeyPrompt(false);
   };
 
   const sendMessage = async () => {
@@ -101,35 +91,6 @@ export default function Home() {
 
   return (
     <div>
-      {/* API Key Prompt Modal */}
-      {showApiKeyPrompt && (
-        <div style={{
-          position: "fixed",
-          top: 0,
-          left: 0,
-          width: "100vw",
-          height: "100vh",
-          background: "rgba(0,0,0,0.5)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          zIndex: 1000,
-        }}>
-          <div style={{ background: "#fff", padding: 24, borderRadius: 8, minWidth: 320 }}>
-            <h2>Enter your OpenAI API Key</h2>
-            <input
-              type="password"
-              value={apiKey}
-              onChange={e => setApiKeyState(e.target.value)}
-              style={{ width: "100%", marginBottom: 12 }}
-              placeholder="sk-..."
-            />
-            <button onClick={handleApiKeySave} disabled={!apiKey.trim()} style={{ width: "100%" }}>
-              Save API Key
-            </button>
-          </div>
-        </div>
-      )}
       <div className="chat-container">
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <h1 className="title">Carty Chatbot</h1>
@@ -137,33 +98,6 @@ export default function Home() {
             ⚙️
           </button>
         </div>
-        {showSettings && (
-          <div className="settings-modal">
-            <div className="settings-content">
-              <label htmlFor="api-key-input">Enter OpenAI API Key:</label>
-              <input
-                id="api-key-input"
-                type="password"
-                value={apiKey}
-                onChange={(e) => setApiKeyState(e.target.value)}
-                className="chat-input"
-                style={{ margin: "12px 0" }}
-              />
-              <div style={{ display: "flex", gap: 8 }}>
-                <button className="send-btn" onClick={handleApiKeySave}>
-                  Save
-                </button>
-                <button
-                  className="send-btn"
-                  style={{ background: "#333", color: "#fff" }}
-                  onClick={() => setShowSettings(false)}
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
         <div className="chat-box">
           {messages.map((msg, idx) => (
             <div key={idx} className={`message ${msg.sender}`}>
